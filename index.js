@@ -17,10 +17,10 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 const Schema = mongoose.Schema;
 
 const fileSchema = new Schema({
-  filename: String,
+  name: String,
   path: String,
   originalName: String,
-  mimetype: String,
+  type: String,
   size: Number
 });
 
@@ -31,7 +31,7 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    cb(null, file.originalname);
   }
 });
 
@@ -49,10 +49,10 @@ app.post('/api/fileanalyse', upload.single('upfile'), function(req, res) {
 
   try {
     const newFile = new File({
-      filename: req.file.filename,
+      name: req.file.filename,
       path: req.file.path,
       originalName: req.file.originalname,
-      mimetype: req.file.mimetype,
+      type: req.file.mimetype,
       size: req.file.size
     });
 
@@ -60,7 +60,12 @@ app.post('/api/fileanalyse', upload.single('upfile'), function(req, res) {
       .then((file) => {
         if (!file) 
           return res.json({error : "error uploading file"});
-        return res.json(file);
+        const returnObj = {
+          name: file.name,
+          type: file.type,
+          size: file.size
+        };
+        return res.json(returnObj);
       })
       .catch((err) => {
         return res.json(err);
